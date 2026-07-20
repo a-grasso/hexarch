@@ -1,7 +1,8 @@
 # hexarch
 
-A **domain-specific language for Hexagonal Architecture (Ports & Adapters)** and
-a CLI that renders it to an interactive diagram in your browser.
+A **domain-specific language for Hexagonal Architecture (Ports & Adapters)**, a
+CLI that renders it to an interactive diagram in your browser, and an agent-skill
+that teaches AI agents to author specs.
 
 Describe a system's architecture in a small YAML DSL - its core, the ports on
 its boundary, the adapters that plug in, the actors that drive it - and let
@@ -22,30 +23,42 @@ whole viewer inlined, no server, works offline), and opens it in your browser.
 
 ## Install
 
-**Homebrew** (macOS / Linux):
-
-```bash
-brew install a-grasso/tap/hex-render
-```
-
-**curl** (prebuilt binary → `~/.local/bin`):
+hexarch ships two things that belong together - the **`hex-render` renderer**
+and the **`hexarch` agent-skill** (which teaches AI agents to author specs and
+render them). One installer sets up both:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/a-grasso/hexarch/main/install.sh | bash
 ```
 
-**From source** (needs [Bun](https://bun.sh) + Node):
+That clones/updates the repo, puts `hex-render` on your `PATH`
+(`~/.local/bin`), and symlinks the skill into `~/.claude/skills/hexarch`. It
+builds the renderer from source when [Bun](https://bun.sh) + Node are present
+(symlinked, so a rebuild updates it), otherwise downloads the prebuilt binary
+for your platform. Idempotent - re-run to update.
+
+```bash
+# scope options
+./install.sh --project ~/repo   # skill into one project's .claude/skills (gitignored)
+./install.sh --skill-only       # skill only
+./install.sh --cli-only         # renderer only
+```
+
+From a local checkout, `just` wraps the same steps:
 
 ```bash
 git clone https://github.com/a-grasso/hexarch && cd hexarch
-just build          # -> dist/hex-render
-just install        # stable copy  -> ~/.local/bin/hex-render
-# or, for a dev checkout you iterate on:
-just link           # symlink -> dist/hex-render, so `just build` updates it in place
+just build      # -> dist/hex-render
+just link       # symlink -> ~/.local/bin (rebuild updates it)
 ```
 
-> Pick **one** channel per machine - `install`/`link` (from source) **or** brew.
-> Two `hex-render` on `PATH` means `PATH` order silently decides which runs.
+**Optional - Homebrew** (renderer only, no skill):
+
+```bash
+brew install a-grasso/tap/hex-render
+```
+
+> Keep **one** `hex-render` on `PATH`: the installer *or* brew, not both.
 
 ---
 
@@ -135,7 +148,9 @@ just check                       # typecheck viewer + CLI
 | [`core/`](core/) | shared semantic model + YAML parser/validator (`@hexarch/core`) |
 | [`viewer/`](viewer/) | Vite/React/TS viewer; real text measurement, SVG rendering, interactions |
 | [`cli/`](cli/) | the `hex-render` CLI (Bun/TS); embeds the built viewer |
+| [`skills/hexarch/`](skills/hexarch/) | the `hexarch` agent-skill (`SKILL.md` + `reference/` symlinked to the spec/examples) |
 | [`examples/`](examples/) | example specs |
+| [`install.sh`](install.sh) | unified installer (skill + renderer) |
 | [`scripts/`](scripts/), [`.github/`](.github/) | formula renderer + release workflow |
 
 The viewer builds to a single inlined HTML (`vite-plugin-singlefile`); a
@@ -144,14 +159,27 @@ produces the standalone `hex-render` binary. The layout is a pure function of
 the parsed model plus measured text, so the same code drives the live viewer and
 any static output.
 
+## For AI agents
+
+Installing the skill teaches AI agents (Claude Code) to author, adapt, and lint
+hexarch specs for a project and to render them with `hex-render`. It auto-loads
+when you ask about hexagonal architecture or a `*.hexarch.yaml`. See
+[`skills/hexarch/SKILL.md`](skills/hexarch/SKILL.md).
+
 ## Distribution
 
-Releases are tag-driven ([`.github/workflows/release.yml`](.github/workflows/release.yml)):
-a `v*` tag cross-compiles the binary for macOS/Linux × arm64/x64 with Bun,
-publishes a GitHub release with per-arch `.tar.xz`, and regenerates
-`Formula/hex-render.rb` in the shared **[a-grasso/homebrew-tap](https://github.com/a-grasso/homebrew-tap)**
-(auth via the repo's `HOMEBREW_TAP_TOKEN`). Cut one with `just release X.Y.Z`.
-The repo must be **public** for `brew`/`curl` to fetch release assets.
+The primary channel is **`install.sh`** - one self-bootstrapping script that
+installs the skill and the renderer together, so they stay version-matched
+(clone-or-update + symlink the skill + build-or-download the CLI).
+
+Tagged releases feed the optional brew channel and the prebuilt-download path:
+`just release X.Y.Z` pushes a `v*` tag, and
+[`.github/workflows/release.yml`](.github/workflows/release.yml) cross-compiles
+the binary for macOS/Linux × arm64/x64 with Bun, publishes a GitHub release with
+per-arch `.tar.xz`, and regenerates `Formula/hex-render.rb` in
+**[a-grasso/homebrew-tap](https://github.com/a-grasso/homebrew-tap)** (auth via
+`HOMEBREW_TAP_TOKEN`). The repo must be **public** for `brew`/`curl` to fetch
+release assets.
 
 ## License
 
