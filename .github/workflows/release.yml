@@ -1,0 +1,86 @@
+name: release
+
+# Tag-push release: build the viewer bundle, embed it, cross-compile the
+# hex-render binary for every target with Bun, publish a GitHub release, then
+# regenerate the Homebrew formula in the shared tap. cargo-dist's flow, by hand,
+# because the binary is Bun-compiled (no cargo-dist/goreleaser equivalent).
+#
+# Requires repo secret HOMEBREW_TAP_TOKEN: a PAT with contents:write on
+# a-grasso/homebrew-tap. If it's missing/expired the final step fails loudly
+# (the release itself still succeeds) - not the silent cargo-dist failure mode.
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Build viewer bundle + embed it
+        run: |
+          npm ci
+          npm run build:embed -w viewer
+          bun run cli/scripts/gen-embed.ts
+
+      - name: Cross-compile binaries
+        run: |
+          set -euo pipefail
+          VERSION="${GITHUB_REF_NAME#v}"
+          mkdir -p out
+          # bun target  ->  release triple (matches the tap formula)
+          declare -A TARGETS=(
+            [bun-darwin-arm64]=aarch64-apple-darwin
+            [bun-darwin-x64]=x86_64-apple-darwin
+            [bun-linux-arm64]=aarch64-unknown-linux-gnu
+            [bun-linux-x64]=x86_64-unknown-linux-gnu
+          )
+          for bt in "${!TARGETS[@]}"; do
+            triple="${TARGETS[$bt]}"
+            work="build/$triple"; mkdir -p "$work"
+            bun build cli/index.ts --compile --minify --sourcemap=none \
+              --target="$bt" --outfile "$work/hex-render"
+            cp LICENSE README.md "$work/" 2>/dev/null || true
+            tar -C "$work" -cJf "out/hex-render-${triple}.tar.xz" .
+          done
+          ( cd out && sha256sum *.tar.xz | tee SHA256SUMS )
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            out/*.tar.xz
+            out/SHA256SUMS
+
+      - name: Regenerate formula in the tap
+        if: ${{ env.HOMEBREW_TAP_TOKEN != '' }}
+        run: |
+          set -euo pipefail
+          VERSION="${GITHUB_REF_NAME#v}"
+          sha() { grep "hex-render-$1.tar.xz" out/SHA256SUMS | cut -d' ' -f1; }
+          git clone "https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/a-grasso/homebrew-tap.git" tap
+          bash scripts/render-formula.sh "$VERSION" \
+            "$(sha aarch64-apple-darwin)" "$(sha x86_64-apple-darwin)" \
+            "$(sha aarch64-unknown-linux-gnu)" "$(sha x86_64-unknown-linux-gnu)" \
+            > tap/Formula/hex-render.rb
+          cd tap
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/hex-render.rb
+          git commit -m "hex-render ${VERSION}"
+          git push

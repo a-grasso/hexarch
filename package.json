@@ -1,0 +1,17 @@
+{
+  "name": "hexarch",
+  "private": true,
+  "version": "0.1.0",
+  "description": "A DSL for Hexagonal Architecture and a viewer/CLI for it",
+  "type": "module",
+  "workspaces": [
+    "core",
+    "viewer",
+    "cli"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w viewer",
+    "build:embed": "npm run build:embed -w viewer",
+    "typecheck": "npm run typecheck -w viewer && npm run typecheck -w cli"
+  }
+}
