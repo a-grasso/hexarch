@@ -1,0 +1,14 @@
+node_modules/
+dist/
+dist-embed/
+build/
+out/
+export/
+
+# Generated from the viewer build by cli/scripts/gen-embed.ts
+cli/embed.ts
+
+*.log
+*.tsbuildinfo
+.DS_Store
+.venv/

@@ -1,0 +1,147 @@
+:root {
+  --bg: #f6f7fb; --panel: #ffffff; --ink: #1e293b; --muted: #64748b;
+  --sidebar: #f0f2f7; --border: #e2e8f0;
+  --hex-fill: #f8fafc; --hex-stroke: #475569;
+  --driving: #6366f1; --driving-soft: #eef2ff;
+  --driven: #0d9488; --driven-soft: #ecfdf5;
+  --chip-domain-bd: #f59e0b; --chip-domain-bg: #fffbeb;
+  --chip-service-bd: #8b5cf6; --chip-service-bg: #f5f3ff;
+  --connector: #94a3b8; --box-stroke: #cbd5e1;
+  --actor-bg: #ffffff; --actor-stroke: #cbd5e1;
+  --popover-bg: #ffffff; --popover-shadow: rgba(15, 23, 42, 0.18);
+}
+:root[data-theme="dark"] {
+  --bg: #0b1120; --panel: #111827; --ink: #e5e7eb; --muted: #94a3b8;
+  --sidebar: #0e1526; --border: #1e293b;
+  --hex-fill: #0f172a; --hex-stroke: #64748b;
+  --driving: #818cf8; --driving-soft: #1e1b4b;
+  --driven: #2dd4bf; --driven-soft: #042f2e;
+  --chip-domain-bd: #fbbf24; --chip-domain-bg: #3a2e12;
+  --chip-service-bd: #a78bfa; --chip-service-bg: #2a1f4d;
+  --connector: #64748b; --box-stroke: #334155;
+  --actor-bg: #1e293b; --actor-stroke: #334155;
+  --popover-bg: #1e293b; --popover-shadow: rgba(0, 0, 0, 0.5);
+}
+
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; margin: 0; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+}
+
+.app { display: grid; grid-template-columns: 232px 1fr; height: 100%; }
+.app.solo { grid-template-columns: 1fr; }
+
+/* ---- sidebar ---- */
+.sidebar {
+  background: var(--sidebar); border-right: 1px solid var(--border);
+  padding: 16px 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;
+}
+.sidebar h1 {
+  font-size: 13px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--muted); margin: 4px 8px 10px;
+}
+.spec-item {
+  text-align: left; border: none; background: none; color: var(--ink);
+  padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: 13.5px;
+  font-family: inherit; width: 100%;
+}
+.spec-item:hover { background: var(--border); }
+.spec-item.active { background: var(--driving); color: #fff; font-weight: 600; }
+.spec-item .err-dot { color: #ef4444; margin-left: 6px; }
+.sidebar .spacer { flex: 1; }
+.sidebar .hint { font-size: 11px; color: var(--muted); margin: 8px; line-height: 1.5; }
+
+/* ---- main ---- */
+.main { display: flex; flex-direction: column; min-width: 0; }
+.toolbar {
+  display: flex; align-items: center; gap: 12px; padding: 12px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.toolbar .title { font-size: 17px; font-weight: 700; letter-spacing: -.01em; }
+.toolbar .subtitle { font-size: 12.5px; color: var(--muted); }
+.toolbar .grow { flex: 1; }
+.toolbar button {
+  font-family: inherit; font-size: 12.5px; color: var(--ink);
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 8px; padding: 6px 11px; cursor: pointer;
+}
+.toolbar button:hover { border-color: var(--muted); }
+
+.stage { position: relative; flex: 1; overflow: hidden; min-height: 0; }
+.stage svg { display: block; width: 100%; height: 100%; touch-action: none; }
+.stage.grabbing svg { cursor: grabbing; }
+.stage svg { cursor: grab; }
+
+.legend {
+  position: absolute; bottom: 14px; left: 18px; display: flex; gap: 16px;
+  flex-wrap: wrap; font-size: 12px; color: var(--muted);
+  background: color-mix(in srgb, var(--panel) 82%, transparent);
+  border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px;
+  backdrop-filter: blur(4px);
+}
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 12px; height: 12px; border-radius: 3px; }
+
+.zoom-controls {
+  position: absolute; bottom: 14px; right: 18px; display: flex; flex-direction: column;
+  gap: 6px;
+}
+.zoom-controls button {
+  width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--panel); color: var(--ink); font-size: 16px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; line-height: 1;
+}
+.zoom-controls button:hover { border-color: var(--muted); }
+
+.error {
+  margin: 24px; padding: 16px 18px; border-radius: 12px;
+  background: color-mix(in srgb, #ef4444 12%, var(--panel));
+  border: 1px solid #ef4444; color: var(--ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px;
+  white-space: pre-wrap;
+}
+
+/* ---- svg diagram ---- */
+.hex { fill: var(--hex-fill); stroke: var(--hex-stroke); stroke-width: 2.5;
+  stroke-linejoin: round; }
+.core-label { font-size: 13px; font-weight: 700; letter-spacing: .16em; fill: var(--muted); }
+.section-label { font-size: 11px; font-weight: 600; letter-spacing: .1em;
+  text-transform: uppercase; fill: var(--muted); cursor: pointer; }
+.section-toggle { fill: var(--muted); font-size: 11px; }
+
+.chip-domain { fill: var(--chip-domain-bg); stroke: var(--chip-domain-bd); stroke-width: 1.5; }
+.chip-service { fill: var(--chip-service-bg); stroke: var(--chip-service-bd); stroke-width: 1.5; }
+.chip-text { font-size: 12.5px; font-weight: 600; fill: var(--ink); }
+
+.port { stroke-width: 2; cursor: pointer; }
+.port.driving { fill: var(--driving-soft); stroke: var(--driving); }
+.port.driven { fill: var(--driven-soft); stroke: var(--driven); }
+.port-name { font-size: 12.5px; font-weight: 700; fill: var(--ink); pointer-events: none; }
+.port-type { font-size: 10.5px; fill: var(--muted); pointer-events: none; }
+.port-ops-badge { font-size: 9.5px; font-weight: 700; }
+
+.adapter { fill: var(--panel); stroke: var(--box-stroke); stroke-width: 1.5; }
+.stripe.driving { fill: var(--driving); }
+.stripe.driven { fill: var(--driven); }
+.adapter-name { font-size: 13px; font-weight: 650; fill: var(--ink); pointer-events: none; }
+.adapter-tech { font-size: 11px; fill: var(--muted); pointer-events: none; }
+
+.actor { fill: var(--actor-bg); stroke: var(--actor-stroke); stroke-width: 1.5;
+  stroke-dasharray: 4 3; }
+.actor-name { font-size: 12.5px; font-weight: 600; fill: var(--ink); pointer-events: none; }
+
+.connector { fill: none; stroke: var(--connector); stroke-width: 2; }
+.connector.hot { stroke: var(--driving); stroke-width: 2.6; }
+.connector.hot.driven { stroke: var(--driven); }
+.arrowhead { fill: var(--connector); }
+
+.dim { opacity: 0.28; transition: opacity .12s; }
+
+.popover-box { fill: var(--popover-bg); stroke: var(--box-stroke); stroke-width: 1;
+  filter: drop-shadow(0 6px 16px var(--popover-shadow)); }
+.popover-title { font-size: 12.5px; font-weight: 700; fill: var(--ink); }
+.popover-sub { font-size: 10.5px; fill: var(--muted); }
+.popover-op { font-size: 11.5px; fill: var(--ink); }
+.popover-op-bullet { fill: var(--driving); }

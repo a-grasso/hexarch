@@ -1,0 +1,50 @@
+# A small, lopsided architecture: one driving port, a couple of driven ports.
+# Exercises the "bare string" port shorthand and single-adapter columns.
+architecture:
+  name: URL Shortener
+
+core:
+  domain:
+    - ShortLink
+    - Visit
+  application:
+    services:
+      - ShortenUrl
+      - ResolveUrl
+      - RecordVisit
+
+ports:
+  inbound:
+    - name: LinkApi
+      type: command
+      operations:
+        - shorten
+        - resolve
+
+  outbound:
+    - LinkStore          # bare-string shorthand: just a name
+    - name: Analytics
+      type: event
+    - name: Cache
+      type: persistence
+
+adapters:
+  primary:
+    - name: HTTP Handler
+      technology: Go net/http
+      implements:
+        - LinkApi
+
+  secondary:
+    - name: DynamoDB
+      technology: AWS SDK
+      implements:
+        - LinkStore
+    - name: Segment
+      technology: HTTPS
+      implements:
+        - Analytics
+    - name: Redis
+      technology: Redis
+      implements:
+        - Cache

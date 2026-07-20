@@ -1,0 +1,14 @@
+{
+  "name": "@hexarch/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "hexarch DSL: semantic model + YAML parser/validator (shared by viewer and CLI)",
+  "main": "parser.ts",
+  "dependencies": {
+    "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9"
+  }
+}

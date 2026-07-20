@@ -1,0 +1,74 @@
+# A busier, denser architecture: many ports on both sides and adapters that
+# implement several ports at once. Stresses the layout's vertical sizing and
+# arrow routing.
+architecture:
+  name: IoT Telemetry Ingest
+
+core:
+  domain:
+    - Device
+    - Reading
+    - Threshold
+    - Alert
+  application:
+    services:
+      - IngestReading
+      - EvaluateThresholds
+      - RaiseAlert
+      - RegisterDevice
+
+ports:
+  inbound:
+    - name: TelemetryIntake
+      type: command
+      operations:
+        - ingest
+    - name: DeviceRegistry
+      type: command
+      operations:
+        - register
+        - decommission
+    - name: DashboardQuery
+      type: query
+      operations:
+        - latestReadings
+
+  outbound:
+    - name: ReadingStore
+      type: persistence
+    - name: DeviceStore
+      type: persistence
+    - name: AlertNotifier
+      type: notification
+    - name: MetricsSink
+      type: messaging
+
+adapters:
+  primary:
+    - name: MQTT Broker
+      technology: Eclipse Mosquitto
+      implements:
+        - TelemetryIntake
+    - name: Admin REST
+      technology: FastAPI
+      implements:
+        - DeviceRegistry
+        - DashboardQuery
+
+  secondary:
+    - name: TimescaleDB
+      technology: PostgreSQL
+      implements:
+        - ReadingStore
+    - name: MongoDB
+      technology: Mongo Driver
+      implements:
+        - DeviceStore
+    - name: PagerDuty
+      technology: HTTPS
+      implements:
+        - AlertNotifier
+    - name: Prometheus
+      technology: OTLP
+      implements:
+        - MetricsSink

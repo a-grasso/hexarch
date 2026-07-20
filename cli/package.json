@@ -1,0 +1,20 @@
+{
+  "name": "hex-render",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Render a hexarch DSL file to an interactive architecture diagram in your browser",
+  "bin": {
+    "hex-render": "./index.ts"
+  },
+  "scripts": {
+    "gen-embed": "bun run scripts/gen-embed.ts",
+    "build": "bun build ./index.ts --compile --minify --outfile ../dist/hex-render",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.1.14",
+    "@types/node": "^22.20.1",
+    "typescript": "^5.6.3"
+  }
+}

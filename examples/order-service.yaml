@@ -1,0 +1,74 @@
+# The canonical example from the task brief.
+architecture:
+  name: Order Service
+  description: Places and cancels customer orders, taking payment and emitting events.
+
+# Optional: who drives the system, and through which primary adapter.
+actors:
+  - name: Customer
+    drives: [REST API]
+    description: Places and cancels their own orders via the storefront.
+  - name: Ops Engineer
+    drives: [CLI]
+
+core:
+  domain:
+    - Order
+    - Payment
+    - LineItem
+  application:
+    services:
+      - CreateOrder
+      - CancelOrder
+
+ports:
+  inbound:
+    - name: OrderCommand
+      type: command
+      description: Write-side use cases that change order state.
+      operations:
+        - createOrder
+        - cancelOrder
+    - name: OrderQuery
+      type: query
+      operations:
+        - getOrder
+        - listOpenOrders
+
+  outbound:
+    - name: OrderRepository
+      type: persistence
+      operations:
+        - save
+        - findById
+    - name: PaymentGateway
+      type: external-service
+      description: Charges and refunds via a third-party processor.
+    - name: EventPublisher
+      type: messaging
+
+adapters:
+  primary:
+    - name: REST API
+      technology: Spring Boot
+      implements:
+        - OrderCommand
+        - OrderQuery
+    - name: CLI
+      technology: Bash
+      implements:
+        - OrderCommand
+
+  secondary:
+    - name: PostgreSQL
+      technology: PostgreSQL
+      implements:
+        - OrderRepository
+    - name: Stripe
+      technology: HTTP
+      implements:
+        - PaymentGateway
+    - name: Kafka
+      technology: Kafka
+      implements:
+        - EventPublisher
