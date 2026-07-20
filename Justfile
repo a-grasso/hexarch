@@ -33,10 +33,17 @@ check: embed
     npm run typecheck -w viewer
     cd cli && npx tsc --noEmit
 
-# Install the compiled binary to ~/.local/bin.
+# Install a stable copy of the compiled binary to ~/.local/bin.
 install: build
     install -m 0755 dist/hex-render "${HOME}/.local/bin/hex-render"
-    @echo "installed ~/.local/bin/hex-render"
+    @echo "installed ~/.local/bin/hex-render (copy)"
+
+# Dev variant: symlink the on-PATH command to the repo build output, so a
+# later `just build` updates the installed command with no reinstall step.
+# Use this OR `install` OR brew - keep exactly one hex-render on PATH.
+link: build
+    ln -sfn "$(pwd)/dist/hex-render" "${HOME}/.local/bin/hex-render"
+    @echo "linked ~/.local/bin/hex-render -> dist/hex-render"
 
 # Tag and push a release (triggers .github/workflows/release.yml).
 release VERSION:
