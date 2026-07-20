@@ -1,7 +1,7 @@
 {
   "name": "hexarch-viewer",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "Standalone viewer for the hexarch hexagonal-architecture DSL",
   "scripts": {

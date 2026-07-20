@@ -1,7 +1,7 @@
 {
   "name": "hexarch",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A DSL for Hexagonal Architecture and a viewer/CLI for it",
   "type": "module",
   "workspaces": [
