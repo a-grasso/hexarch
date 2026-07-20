@@ -39,8 +39,13 @@ curl -fsSL https://raw.githubusercontent.com/a-grasso/hexarch/main/install.sh | 
 ```bash
 git clone https://github.com/a-grasso/hexarch && cd hexarch
 just build          # -> dist/hex-render
-just install        # -> ~/.local/bin/hex-render
+just install        # stable copy  -> ~/.local/bin/hex-render
+# or, for a dev checkout you iterate on:
+just link           # symlink -> dist/hex-render, so `just build` updates it in place
 ```
+
+> Pick **one** channel per machine - `install`/`link` (from source) **or** brew.
+> Two `hex-render` on `PATH` means `PATH` order silently decides which runs.
 
 ---
 
